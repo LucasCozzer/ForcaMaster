@@ -1,113 +1,230 @@
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
 #include <time.h>
+#include <stdlib.h>
 // defines
-#define MAX_ATTEMPTS 10
+#define KICKS 10 // chutes
+#define MAXIMUM_ERRORS 6; // máximo de erros
+#define SECRET_WORD_SIZE 5 + 1 // largura máxima de palavra secreta
 
 // procedimentos
-void welcome_msg(); // mensagem de instruções e boas vindas
-void wordInitialization(char * vstr); // inicializar a palavra (string) no vetor que irá guardar a palavra
-void wordMask(char *vstr); // mascarando palavra
+
+
+void welcome_message (); // mensagem de boas vindas
+
+void word_initializer (char * string_secret); // inicializador de palavra secreta
+
+void letter_mask (char * wordSecret); // susbstituindo caracteres das letras por '-'
+
+void unmasking_word (int indice, char * mask, char * str); // substitui indice da mascara pelo caracter encontrado
+
+void initializing_letter_mask (char * mask, char * wordSecret); // inicializando a mascara da string secreta
+
+void show_hud (); // mostrando hud do jogo para o usuário
+
+
+
 // funções
-char *secretWord(); // retorna a palavra (string) secreta
+
+char * word_secret (); // retorna a string secreta
+
+int existence_check (char * str, char letter_input); // verifica se a letra existe dentro da string
 
 
 int main () {
-	// variaveis
-	char word[5 + 1]; // declaração de vetor para armazenar a palavra secreta
-	wordInitialization(word); // inicializando palavra (word) secreta
 
-	char letter_user;
-	int attempts = 0;
-	// mensagem de instução
-	welcome_msg();
-	// verificado se a entrada for igual à '\n'
-	printf("\tDigite enter para continuar!: "); while (getchar() != '\n');
-	system("cls"); // limpando a tela do system OP
+	// variaveis do jogo
+
+	char stringSecret[SECRET_WORD_SIZE]; // vetor armazém de palavra secreta
+	char maskString[SECRET_WORD_SIZE]; // vetor de mascara de palavra secreta
+	int attempts, errors, hits; // contabilizar quantidade de tentativas e quantos erros aconteceramm durante o jogo
+	char inputLetter; // conter a letra de entrada do usuário
+
+	// exibindo mensagem de boas vindas e regras do jogo
+
+	welcome_message();
+	putchar('\n');
+	printf("\tPor favor, pressione a tecla ENTER e inicie o jogo: "); while (getchar() != '\n'); // esperando o caracter '\n' [NewLine]
+
+
+
+	// inicializando todos os dados do jogo
+
+	word_initializer(stringSecret); // inicializando a palavra secreta do jogo
+	attempts = 0; // iniciando variavel que ira conter as tentativas
+	errors = 0; // iniciando variavel que ira conter os erros
+	initializing_letter_mask(maskString, stringSecret); // inicializando a mascara da palavra
+
+	// iniciando lógica do jogo
 
 	do {
-		wordMask(word);
-		putchar('\n'); // pulando uma linha
-		printf("Entre com a letra: ");
-		letter_user = getchar();
-		attempts++;
+		system("clear");
+		printf("\n\n %s \n\n", stringSecret);
+		show_hud(errors, attempts, maskString);
+		putchar('\n');
 
-		while (getchar() != '\n')
-	} while(attempts != MAX_ATTEMPTS);
-	// mascarando string secreta
-	
+		printf("Por favor, entre com uma letra: ");
+		inputLetter = getchar();
+
+		int i = existence_check(stringSecret, inputLetter);
+		if (i != 6) {
+			if (hits == strlen(stringSecret)) {
+				printf("FIM! Venceu\n");
+				return 0;
+			}
+
+			hits++;
+			unmasking_word(i, maskString, stringSecret);
+		} else {
+
+			if (errors == 6) {
+				printf("FIM! Perdeu\n");
+				break;
+			}
+
+			errors++;
+		}
+
+		
+
+		while(getchar() != '\n');
+
+	} while(attempts != KICKS);
+
+
 	return 0;
 }
 
 
 
+
+
+// Funções
+
+
+int existence_check (char * str, char letter_input) {
+
+	for (int i = 0; *str; i++) {
+		if (*str == letter_input) return i; 
+		*str++;
+
+	}
+
+	return 6;
+}
+
+
+
+
+
+char * word_secret () {
+
+	/*
+		Criador de palavra secreta, selecionando palavra secreta aleatoriamente
+	*/
+
+	char * SecretWordList[] = {
+		"Amor",
+		"Casa",
+		"Paz",
+		"Flor",
+		"Céu",
+		"Mar",
+		"Luz",
+		"Vida",
+		"Bem",
+		"Livro"
+	};
+
+	srand(time(NULL)); // baseando a randomização com o time do sys op
+
+	return *(SecretWordList + (rand() % SECRET_WORD_SIZE) );
+
+}
+
+
+
+
+
+
+
+
 // procedimentos
 
-void welcome_msg()
-{
+void welcome_message () {
+	
 
-	puts("\t__________");
-	puts("\t|\t |");
-	puts("\t|\t |");
-	puts("\t|\t O \tBem-Vindo ao jogo da forca!");
-	puts("\t|\t/|\\ \tO jogo consiste em uma palavra de 5 letras,");
-	puts("\t|\t/ \\ \tE o jogador tem 10 tentativas! Boa sorte!");
-	puts("\t|");
-	putchar('\n');
+	/*
+		Exibindo a mensagem inicial do jogo
+	*/
+
+
+	puts("\t ____________");
+	puts("\t |\t   |");
+	puts("\t |\t   |");
+	puts("\t |\t   O \t Bem Vindo ao Jogo da Forca!");
+	puts("\t |\t  /|\\ \t As regras do jogo são: ");
+	puts("\t |\t  / \\ \t Número de Tentativas: 10\t|\tTamnho da Palavra 5 letras!");
+	puts("\t | \t \t Acerte com o mínimo de tentativas a palavra secreta!");
+	puts("\t | \t \t Boa Sorte!");
+	puts("\t |");
 }
 
 
-void wordInitialization(char * vstr)
-{
+
+
+void word_initializer (char * string_secret) {
+
 	/*
-		Inicializando vetor 'word' com palavra chave
+		Inicializando a palavra secreta
 	*/
 
-	// declaração de ponteiro para armazenar 
-	char * word_secret = secretWord(); // armazenando palavra selecionada aleatoriamente
+	strncpy(string_secret, word_secret(), SECRET_WORD_SIZE);
+}
 
-	int i;
-	// percorrendo palavra (string) sorteada
-	for (i = 0; *word_secret; i++) {
-		// adicionando caractere da string no vetor passado como argumento
-		*(vstr + i) = *word_secret;
-		word_secret++; // incrementando ponteiro (+1byte) para percorrer string
+
+
+
+void initializing_letter_mask (char * mask, char * wordSecret) {
+
+	/*
+		Inicializando a mascara da plavara secreta
+	*/
+
+
+	// percorrendo palavra secreta
+	for (int i = 0; *wordSecret; i++) {
+		*(mask + i) = '-'; // atribuindo o caratere '-' em cada indice do vetor mask
+		*(wordSecret++); // +1 byte
 	}
-}
 
-void wordMask(char *vstr)
-{
-	/*
-		Mascarando cada caractere da palavra secreta
-	*/
-	int i;
-	// percorrendo cada caratere da palavra secreta
-	for (i = 0; *vstr; i++) {
-		// verificando se o caractere aninhado é um espaço
-		if (*vstr == ' ') printf(" * ");
-		// caso não for imprimir 
-		else printf(" | - | ");
-		vstr++; // incrementando +1 byte no ponteiro
-	}
 }
 
 
-// funções
 
-// palavra (string) secreta
-char *secretWord()
-{
-	/*
-		define a palavra secreta a partir (string) de uma lista de palavras (strings) definidas na variavel list 
-	*/
 
-	srand(time(NULL)); // basear geração de números aleatorios com base no horário do sistema op
 
-	// ponteiro de vetores do tipo char
-	char * list[] = {"Palavra 1", "Palavra 2", "Palavra 3", "Palavra 4", "Palavra 5", "Palavra 6", "Palavra 7", "Palavra 8", "Palavra 9","Palavra 10"};
 
-	int num = rand() % 9; // gerando número aleatório de 0 à 2
+void show_hud (int errors, int attempts, char * maskString) {
 
-	// retornando palavra (string) aleatótia
-	return *(list + num);
+
+	puts("\t ____________");
+	puts("\t |\t   |");
+	puts("\t |\t   |");
+	printf("\t |\t   %c \t Número de tentativas restantes: %d\n", errors >= 1 ? 'O' : ' ', KICKS - attempts);
+	printf("\t |\t  %c%c%c \t Palavra secreta: %s\n", errors >= 3 ? '/' : ' ', errors >= 2 ? '|': ' ', errors >= 4 ? '\\' : ' ', maskString);
+	printf("\t |\t  %c %c \n", errors >= 5 ? '/' : ' ', errors >= 6 ? '\\': ' ');
+	puts("\t |");
+	puts("\t |");
+	puts("\t |");
+
+}
+
+
+
+
+void unmasking_word (int indice, char * mask, char * str) {
+
+	*(mask + indice) = *(str + indice);
+
 }
