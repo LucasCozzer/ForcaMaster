@@ -26,10 +26,18 @@ char* word_secret(); // retorna uma palavra secreta aleatória
 void existence_check(char *str, char letter_input, int *indices, int *found_count); // verifica a existência de letras
 
 int main() {
+    #ifdef _WIN32
+        system("chcp 65001");
+        system("cls");
+    #endif
+
+
     char stringSecret[SECRET_WORD_SIZE];
     char maskString[SECRET_WORD_SIZE];
     int attempts = 0, errors = 0, hits = 0;
     char inputLetter;
+    char triedLetters[KICKS] = {0}; // Array para armazenar letras tentadas
+    int triedCount = 0;
 
     welcome_message();
     putchar('\n');
@@ -46,7 +54,28 @@ int main() {
         // captura da entrada do usuário com validação
         printf("Entre com uma letra: => ");
         scanf(" %c", &inputLetter);
+
+        // Verifica se a entrada é um número
+        if (isdigit(inputLetter)) {
+            printf("Erro: Tipo de entrada inválido\n");
+            return 1;
+        }
+
         inputLetter = tolower(inputLetter);
+
+        // Verificar se a letra já foi tentada
+        int alreadyTried = 0;
+        for (int i = 0; i < triedCount; i++) {
+            if (triedLetters[i] == inputLetter) {
+                alreadyTried = 1;
+                printf("Você já tentou a letra '%c'. Tente outra.\n", inputLetter);
+                break;
+            }
+        }
+        if (alreadyTried) continue;
+
+        // Armazena a letra tentada
+        triedLetters[triedCount++] = inputLetter;
 
         // verifica a letra em todas as ocorrências
         int indices[SECRET_WORD_SIZE] = {0}, found_count = 0;
@@ -93,7 +122,7 @@ void existence_check(char *str, char letter_input, int *indices, int *found_coun
 }
 
 char* word_secret() {
-    char *SecretWordList[] = {
+    char * SecretWordList[] = {
         "amor", "casa", "paz", "flor", "ceu", "mar", "luz", "vida", "bem", "livro"
     };
     srand(time(NULL));
